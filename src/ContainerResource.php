@@ -173,6 +173,18 @@ final class ContainerResource
     }
 
     /**
+     * Check if the resource has an instance.
+     *
+     * @return  bool
+     *
+     * @since   3.1.0
+     */
+    public function hasInstance(): bool
+    {
+        return $this->instance !== null;
+    }
+
+    /**
      * Get the factory
      *
      * @return  callable

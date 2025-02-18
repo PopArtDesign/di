@@ -59,6 +59,14 @@ class Container implements ContainerInterface
     protected $tags = [];
 
     /**
+     * Holds the configurators.
+     *
+     * @var    array
+     * @since  3.1.0
+     */
+    protected $configurators = [];
+
+    /**
      * Constructor for the DI Container
      *
      * @param   ContainerInterface|null  $parent  Parent for hierarchical containers.
@@ -92,7 +100,14 @@ class Container implements ContainerInterface
             throw new KeyNotFoundException(sprintf("Resource '%s' has not been registered with the container.", $resourceName));
         }
 
-        return $this->resources[$key]->getInstance();
+        $resource = $this->resources[$key];
+
+        if (!$resource->isShared() || !$resource->hasInstance()) {
+            return $this->applyConfigurators($key, $resource->getInstance());
+        }
+
+
+        return $resource->getInstance();
     }
 
     /**
@@ -174,6 +189,28 @@ class Container implements ContainerInterface
     protected function resolveAlias($resourceName)
     {
         return $this->aliases[$resourceName] ?? $resourceName;
+    }
+
+    /**
+     * Get service's aliases.
+     *
+     * @param   string  $resourceName  The key to search for.
+     *
+     * @return  array
+     *
+     * @since   3.1.0
+     */
+    protected function getServiceAliases(string $key): array
+    {
+        $aliases = [];
+
+        foreach ($this->aliases as $k => $alias) {
+            if ($alias === $key) {
+                $aliases[] = $k;
+            }
+        }
+
+        return $aliases;
     }
 
     /**
@@ -439,6 +476,62 @@ class Container implements ContainerInterface
         };
 
         $this->set($key, $closure, $resource->isShared());
+    }
+
+    /**
+     * Configure service after instantiation.
+     *
+     * @param   string    $resourceName  Service identifier or FQCN.
+     * @param   callable  $callable      A callable to configure service.
+     *
+     * @return  $this
+     *
+     * @since   3.1.0
+     */
+    public function configure(string $resourceName, callable $callable): self
+    {
+        $this->configurators[$resourceName][] = $callable;
+
+        return $this;
+    }
+
+    /**
+     * Apply configurators for service.
+     *
+     * @param   string  $key       Service identifier.
+     * @param   mixed   $instance  Service instance.
+     *
+     * @return  mixed  Service instance.
+     *
+     * @since   3.1.0
+     */
+    private function applyConfigurators(string $key, $instance)
+    {
+        if (empty($this->configurators)) {
+            return $instance;
+        }
+
+        $keys = array_merge([ $key ], $this->getServiceAliases($key));
+
+        if (is_object($instance)) {
+            $keys = array_merge(
+                $keys,
+                [ get_class($instance) ],
+                class_parents($instance) ?: [],
+                class_implements($instance) ?: [],
+                class_uses($instance) ?: [],
+            );
+        }
+
+        foreach ($keys as $k) {
+            if (isset($this->configurators[$k])) {
+                foreach ($this->configurators[$k] as $callable) {
+                    $callable($instance, $this);
+                }
+            }
+        }
+
+        return $instance;
     }
 
     /**

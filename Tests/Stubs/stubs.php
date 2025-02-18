@@ -177,3 +177,23 @@ class StubPsrContainer implements ContainerInterface
         return isset($this->services[$id]);
     }
 }
+
+interface DatabaseAwareInterface
+{
+    public function setDatabase($db): void;
+}
+
+class UserModel implements DatabaseAwareInterface
+{
+    private $db = null;
+
+    public function setDatabase($db): void
+    {
+        $this->db = $db;
+    }
+
+    public function getDatabase()
+    {
+        return $this->db;
+    }
+}

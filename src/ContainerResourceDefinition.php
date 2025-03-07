@@ -185,7 +185,7 @@ class ContainerResourceDefinition
      *
      * @since   __DEPLOY_VERSION__
      */
-    public function apply(): Container
+    public function end(): Container
     {
         $this->container->set($this->key, $this->value, $this->shared, $this->protected);
 

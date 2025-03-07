@@ -33,7 +33,7 @@ class ContainerResourceDefinitionTest extends TestCase
             ->factory(static function () {
                 return new Stub1();
             })
-            ->apply();
+            ->end();
 
 
         $foo = $container->get('foo');

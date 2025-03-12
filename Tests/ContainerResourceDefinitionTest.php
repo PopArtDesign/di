@@ -48,4 +48,19 @@ class ContainerResourceDefinitionTest extends TestCase
         $this->assertSame([ $foo ], $container->getTagged('tag1'));
         $this->assertSame([ $foo ], $container->getTagged('tag2'));
     }
+
+    /**
+     * @testdox  Creates factory automatically
+     *
+     * @covers   Joomla\DI\ContainerResourceDefinition
+     */
+    public function testDefAutoFactory(): void
+    {
+        $container = new Container();
+        $container->def(Stub1::class)->end();
+
+        $stub1 = $container->get(Stub1::class);
+
+        $this->assertInstanceOf(Stub1::class, $stub1);
+    }
 }

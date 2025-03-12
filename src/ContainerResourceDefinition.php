@@ -187,6 +187,8 @@ class ContainerResourceDefinition
      */
     public function end(): Container
     {
+        $this->value = $this->value ?? fn() => new $this->key();
+
         $this->container->set($this->key, $this->value, $this->shared, $this->protected);
 
         foreach ($this->aliases as $alias) {

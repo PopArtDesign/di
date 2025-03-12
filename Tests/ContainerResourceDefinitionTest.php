@@ -63,4 +63,44 @@ class ContainerResourceDefinitionTest extends TestCase
 
         $this->assertInstanceOf(Stub1::class, $stub1);
     }
+
+    /**
+     * @testdox  Creates factory automatically with autowiring
+     *
+     * @covers   Joomla\DI\ContainerResourceDefinition
+     */
+    public function testDefAutowire(): void
+    {
+        $container = new Container();
+
+        $container->def(StubInterface::class)
+            ->factory(fn () => new Stub1())
+            ->shared()
+            ->end();
+
+        $container->def(Stub2::class)
+            ->end();
+
+        $stub2 = $container->get(Stub2::class);
+
+        $this->assertInstanceOf(Stub2::class, $stub2);
+        $this->assertSame($container->get(StubInterface::class), $stub2->stub);
+    }
+
+    public function testDefAutowireBuiltIn(): void
+    {
+        $container = new Container();
+
+        $container->def('stub')
+            ->value('stub')
+            ->end();
+
+        $container->def(Stub6::class)
+            ->end();
+
+        $stub6 = $container->get(Stub6::class);
+
+        $this->assertInstanceOf(Stub6::class, $stub6);
+        $this->assertSame('stub', $stub6->stub);
+    }
 }

@@ -187,7 +187,7 @@ class ContainerResourceDefinition
      */
     public function end(): Container
     {
-        $this->value = $this->value ?? fn() => new $this->key();
+        $this->value = $this->value ?? $this->makeFactory($this->key);
 
         $this->container->set($this->key, $this->value, $this->shared, $this->protected);
 
@@ -200,5 +200,32 @@ class ContainerResourceDefinition
         }
 
         return $this->container;
+    }
+
+    private function makeFactory(string $key): callable
+    {
+        $reflectionClass = new \ReflectionClass($key);
+        if (!$constructor = $reflectionClass->getConstructor()) {
+            return fn () => new $key();
+        }
+
+        $deps = [];
+        foreach ($constructor->getParameters() as $parameter) {
+            $type = $parameter->getType();
+
+            if ($type === null || $type->isBuiltIn()) {
+                $deps[] = $parameter->getName();
+
+                continue;
+            }
+
+            $deps[] = $type->getName();
+        }
+
+        return function (Container $container) use ($key, $deps) {
+            $args = \array_map(fn ($dep) => $container->get($dep), $deps);
+
+            return new $key(...$args);
+        };
     }
 }

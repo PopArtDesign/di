@@ -210,7 +210,7 @@ class ContainerResourceTest extends TestCase
             Stub2::class
         );
 
-        $stub2 = $resource->getInstance(false);
+        $stub2 = $resource->getInstance();
 
         $this->assertTrue(
             (new \ReflectionClass(Stub2::class))->isUninitializedLazyObject($stub2),
@@ -251,7 +251,7 @@ class ContainerResourceTest extends TestCase
             Stub2::class
         );
 
-        $stub2 = $resource->getInstance(false);
+        $stub2 = $resource->getInstance();
 
         ob_start();
         var_dump($stub2);

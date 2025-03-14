@@ -124,6 +124,14 @@ final class ContainerResource
     private $lazy = false;
 
     /**
+     * Resource key
+     *
+     * @var    string
+     * @since  __DEPLOY_VERSION__
+     */
+    private $key = '';
+
+    /**
      * Create a resource representation
      *
      * @param   Container  $container  The container
@@ -139,6 +147,7 @@ final class ContainerResource
         $this->shared    = ($mode & self::SHARE) === self::SHARE;
         $this->protected = ($mode & self::PROTECT) === self::PROTECT;
         $this->lazy      = ($mode & self::LAZY) === self::LAZY;
+        $this->key       = $key;
 
         if (\is_callable($value)) {
             $this->factory = $value;
@@ -204,15 +213,13 @@ final class ContainerResource
      * If a factory was provided, the resource is created and - if it is a shared resource - cached internally.
      * If the resource was provided directly, that resource is returned.
      *
-     * @param   boolean  $noLazy  Not to use the lazy proxy
-     *
      * @return  mixed
      *
      * @since   2.0.0
      */
-    public function getInstance(bool $noLazy = true)
+    public function getInstance()
     {
-        $callable = $noLazy ? $this->factory : $this->lazyFactory ?? $this->factory;
+        $callable = $this->lazyFactory ?? $this->factory;
 
         if ($this->isShared()) {
             if ($this->instance === null) {
@@ -258,6 +265,10 @@ final class ContainerResource
         $factory = $this->factory;
 
         $this->factory = fn(Container $container) => $callable($factory($container), $container);
+
+        if ($this->lazy) {
+            $this->lazyFactory = $this->makeLazyFactory($this->key, $this->factory);
+        }
     }
 
     /**

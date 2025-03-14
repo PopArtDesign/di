@@ -431,18 +431,9 @@ class Container implements ContainerInterface
      */
     public function extend($resourceName, callable $callable)
     {
-        $key      = $this->resolveAlias($resourceName);
-        $resource = $this->getResource($key, true);
+        $key = $this->resolveAlias($resourceName);
 
-        $closure = function ($c) use ($callable, $resource) {
-            return $callable($resource->getInstance(true), $c);
-        };
-
-        if ($resource->isLazy()) {
-            $this->lazy($key, $closure, $resource->isShared(), false);
-        } else {
-            $this->set($key, $closure, $resource->isShared(), false);
-        }
+        $this->getResource($key, true)->extend($callable);
     }
 
     /**
